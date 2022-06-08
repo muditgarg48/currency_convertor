@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DMSans',
         primarySwatch: Colors.blue,
       ),
-      home: const CurrencyConvertorPage(title: 'Currency Convertor!'),
+      home: const CurrencyConvertorPage(),
     );
   }
 }
