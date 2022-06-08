@@ -106,26 +106,43 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
         ),
         SizedBox(
           width: MediaQuery.of(context).size.width / 4,
-          child: TextField(
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (number) {
-              if (choice == "source") {
-                setState(() {
-                  fromCurrencyValue = double.parse(number);
-                  toCurrencyValue = fromCurrencyValue * conversionValue;
-                  print("FROM : $fromCurrencyValue");
-                  print("TO : $toCurrencyValue");
-                });
-              } else if (choice == "destination") {
-                setState(() {
-                  toCurrencyValue = double.parse(number);
-                  fromCurrencyValue = toCurrencyValue / conversionValue;
-                  print("FROM : $fromCurrencyValue");
-                  print("TO : $toCurrencyValue");
-                });
-              }
-            },
-          ),
+          child: choice == "source"
+              ? TextField(
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (number) {
+                    setState(() {
+                      fromCurrencyValue = double.parse(number);
+                      toCurrencyValue = fromCurrencyValue * conversionValue;
+                      print("FROM : $fromCurrencyValue");
+                      print("TO : $toCurrencyValue");
+                    });
+                  },
+                )
+              : Text(
+                  "$toCurrencyValue",
+                  style: Theme.of(context).textTheme.headline4,
+                ),
+          // TextField(
+          //   keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          //   onChanged: (number) {
+          //     if (choice == "source") {
+          //       setState(() {
+          //         fromCurrencyValue = double.parse(number);
+          //         toCurrencyValue = fromCurrencyValue * conversionValue;
+          //         print("FROM : $fromCurrencyValue");
+          //         print("TO : $toCurrencyValue");
+          //       });
+          //     } else if (choice == "destination") {
+          //       setState(() {
+          //         toCurrencyValue = double.parse(number);
+          //         fromCurrencyValue = toCurrencyValue / conversionValue;
+          //         print("FROM : $fromCurrencyValue");
+          //         print("TO : $toCurrencyValue");
+          //       });
+          //     }
+          //   },
+          // ),
         ),
       ],
     );
@@ -184,7 +201,7 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
     );
   }
 
-  Widget inputCard() {
+  Widget inputCardContents() {
     return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -211,8 +228,18 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
     );
   }
 
-  Widget resultCard() {
-    return const Text("Hi!");
+  Widget resultCardContents() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text(
+              "Chosen Currency exchange is : ${fromCurrency.name} (${fromCurrency.code}) --> ${toCurrency.name} (${fromCurrency.code})"),
+          Text(
+              "LIVE Conversion Rate is: ${fromCurrency.symbol}1 = ${toCurrency.symbol}$conversionValue"),
+        ],
+      ),
+    );
   }
 
   @override
@@ -231,24 +258,17 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
           child: ListView(
             children: [
               myCard(
-                contents: inputCard(),
+                contents: inputCardContents(),
                 deviceHeight: MediaQuery.of(context).size.height,
                 deviceWidth: MediaQuery.of(context).size.width,
               ),
               myCard(
-                contents: resultCard(),
-                deviceHeight: MediaQuery.of(context).size.height,
+                contents: resultCardContents(),
+                deviceHeight: MediaQuery.of(context).size.height / 3,
                 deviceWidth: MediaQuery.of(context).size.width,
               ),
             ],
           ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.all(10),
-        child: ElevatedButton(
-          child: const Text("Convert!"),
-          onPressed: () {},
         ),
       ),
     );
