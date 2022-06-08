@@ -1,5 +1,7 @@
+
 import 'package:flutter/material.dart';
 
+// ignore: camel_case_types
 class customSliver extends StatelessWidget {
   const customSliver(
       {Key? key, required this.appBarTitle, required this.appBarBG})

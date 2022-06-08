@@ -1,12 +1,15 @@
 import "package:flutter/material.dart";
-import 'package:currency_picker/currency_picker.dart';
+// ignore: depend_on_referenced_packages
+import 'package:currency_picker/currency_picker.dart' as pick;
+
+import 'package:frankfurter/frankfurter.dart' as convert;
 
 import 'appBar.dart';
 
-Currency nullCurrency = Currency(
+pick.Currency nullCurrency = pick.Currency(
   code: "XXX",
   name: "Select a currency",
-  symbol: "?",
+  symbol: "(_)",
   flag: null,
   decimalDigits: 2,
   number: 137,
@@ -52,14 +55,32 @@ class CurrencyConvertorPage extends StatefulWidget {
 }
 
 class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
-  Currency fromCurrency = nullCurrency;
-  Currency toCurrency = nullCurrency;
+  pick.Currency fromCurrency = nullCurrency;
+  pick.Currency toCurrency = nullCurrency;
   double fromCurrencyValue = 0;
   double toCurrencyValue = 0;
-  double conversionValue = 100;
+  double conversionValue = 1;
+  // ignore: prefer_typing_uninitialized_variables
+  var latestForexRates;
+
+  void genParticularForexRate() async {
+    final frankfurter = convert.Frankfurter();
+    final conversion = await frankfurter.getRate(
+      from: convert.Currency(fromCurrency.code),
+      to: convert.Currency(toCurrency.code),
+    );
+    setState(() => conversionValue = conversion.rate);
+    // print('Single conversion: $conversion');
+  }
+
+  void genAllForexRate() async {
+    final frankfurter = convert.Frankfurter();
+    latestForexRates =
+        await frankfurter.latest(from: convert.Currency(fromCurrency.code));
+  }
 
   void swapCurr() => setState(() {
-        Currency temp = toCurrency;
+        pick.Currency temp = toCurrency;
         toCurrency = fromCurrency;
         fromCurrency = temp;
         conversionValue = 1 / conversionValue;
@@ -71,25 +92,27 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
         elevation: MaterialStateProperty.all(30),
       ),
       onPressed: () {
-        showCurrencyPicker(
+        pick.showCurrencyPicker(
           context: context,
           showFlag: true,
           showSearchField: true,
           showCurrencyName: true,
           showCurrencyCode: true,
-          onSelect: (Currency currency) {
+          onSelect: (pick.Currency currency) {
             setState(() {
               if (choice == "source") {
                 fromCurrency = currency;
+                genAllForexRate();
               } else if (choice == "destination") {
                 toCurrency = currency;
+                genParticularForexRate();
               }
             });
           },
           favorite: ['INR', 'EUR', 'USD', 'GBP'],
         );
       },
-      child: const Text("Choose!"),
+      child: const Text("Choose"),
     );
   }
 
@@ -114,8 +137,8 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
                     setState(() {
                       fromCurrencyValue = double.parse(number);
                       toCurrencyValue = fromCurrencyValue * conversionValue;
-                      print("FROM : $fromCurrencyValue");
-                      print("TO : $toCurrencyValue");
+                      // print("FROM : $fromCurrencyValue");
+                      // print("TO : $toCurrencyValue");
                     });
                   },
                 )
@@ -123,32 +146,12 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
                   "$toCurrencyValue",
                   style: Theme.of(context).textTheme.headline4,
                 ),
-          // TextField(
-          //   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          //   onChanged: (number) {
-          //     if (choice == "source") {
-          //       setState(() {
-          //         fromCurrencyValue = double.parse(number);
-          //         toCurrencyValue = fromCurrencyValue * conversionValue;
-          //         print("FROM : $fromCurrencyValue");
-          //         print("TO : $toCurrencyValue");
-          //       });
-          //     } else if (choice == "destination") {
-          //       setState(() {
-          //         toCurrencyValue = double.parse(number);
-          //         fromCurrencyValue = toCurrencyValue / conversionValue;
-          //         print("FROM : $fromCurrencyValue");
-          //         print("TO : $toCurrencyValue");
-          //       });
-          //     }
-          //   },
-          // ),
         ),
       ],
     );
   }
 
-  Widget displayFlag(Currency currentCurr) {
+  Widget displayFlag(pick.Currency currentCurr) {
     return currentCurr.flag == null
         ? ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -160,7 +163,7 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
             ),
           )
         : Text(
-            CurrencyUtils.currencyToEmoji(currentCurr),
+            pick.CurrencyUtils.currencyToEmoji(currentCurr),
             style: const TextStyle(
               fontSize: 25,
             ),
@@ -168,7 +171,7 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
   }
 
   Widget printCurr(String choice) {
-    Currency currentCurr = nullCurrency;
+    pick.Currency currentCurr = nullCurrency;
     if (choice == "source") {
       currentCurr = fromCurrency;
     } else if (choice == "destination") {
@@ -211,7 +214,7 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                onPressed: () {},
+                onPressed: genParticularForexRate,
                 tooltip: "Convert",
                 icon: const Icon(Icons.arrow_downward_rounded, size: 30),
               ),
@@ -228,15 +231,64 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
     );
   }
 
-  Widget resultCardContents() {
+  Widget moreDetailsCardContents() {
     return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text("${fromCurrency.name} (${fromCurrency.code})"),
+            const Icon(Icons.arrow_drop_down_rounded),
+            Text("${toCurrency.name} (${fromCurrency.code})"),
+            Text(
+                "LIVE Forex is: ${fromCurrency.symbol}1 = ${toCurrency.symbol}$conversionValue"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget forexRateSheet() {
+    return SingleChildScrollView(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-              "Chosen Currency exchange is : ${fromCurrency.name} (${fromCurrency.code}) --> ${toCurrency.name} (${fromCurrency.code})"),
-          Text(
-              "LIVE Conversion Rate is: ${fromCurrency.symbol}1 = ${toCurrency.symbol}$conversionValue"),
+          Container(
+            margin: const EdgeInsets.only(
+              top: 10,
+              bottom: 10,
+            ),
+            child: Text(
+              "Current Forex Rate Sheet of ${fromCurrency.code}",
+              style: Theme.of(context).textTheme.headline6,
+              softWrap: true,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const Divider(
+            color: Colors.grey,
+            height: 2,
+            indent: 15,
+            endIndent: 15,
+          ),
+          for (convert.Rate r in latestForexRates)
+            Container(
+              padding: const EdgeInsets.all(3),
+              child: Column(
+                children: [
+                  Text(
+                    "1 ${r.from} = ${r.rate} ${r.to}",
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            ),
+          ElevatedButton(
+            child: const Text('Close Forex Rate Sheet'),
+            onPressed: () => Navigator.pop(context),
+          )
         ],
       ),
     );
@@ -263,13 +315,28 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
                 deviceWidth: MediaQuery.of(context).size.width,
               ),
               myCard(
-                contents: resultCardContents(),
-                deviceHeight: MediaQuery.of(context).size.height / 3,
+                contents: moreDetailsCardContents(),
+                deviceHeight: MediaQuery.of(context).size.height / 2,
                 deviceWidth: MediaQuery.of(context).size.width,
               ),
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: ElevatedButton(
+        child: const Text("View all Forex Rates"),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (BuildContext context) {
+              return Container(
+                height: MediaQuery.of(context).size.height / 1.5,
+                color: Colors.amber,
+                child: forexRateSheet(),
+              );
+            },
+          );
+        },
       ),
     );
   }
