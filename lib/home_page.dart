@@ -54,40 +54,80 @@ class CurrencyConvertorPage extends StatefulWidget {
 class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
   Currency fromCurrency = nullCurrency;
   Currency toCurrency = nullCurrency;
-  num fromCurrencyValue = 0;
-  num toCurrencyValue = 0;
-  num conversionValue = 0;
+  double fromCurrencyValue = 0;
+  double toCurrencyValue = 0;
+  double conversionValue = 100;
 
   void swapCurr() => setState(() {
         Currency temp = toCurrency;
         toCurrency = fromCurrency;
         fromCurrency = temp;
+        conversionValue = 1 / conversionValue;
       });
 
   Widget updateCurr(String choice) {
-    return Center(
-      child: TextButton(
-        onPressed: () {
-          showCurrencyPicker(
-            context: context,
-            showFlag: true,
-            showSearchField: true,
-            showCurrencyName: true,
-            showCurrencyCode: true,
-            onSelect: (Currency currency) {
-              setState(() {
-                if (choice == "source") {
-                  fromCurrency = currency;
-                } else if (choice == "destination") {
-                  toCurrency = currency;
-                }
-              });
-            },
-            favorite: ['INR', 'EUR', 'USD', 'GBP'],
-          );
-        },
-        child: const Text("Choose!"),
+    return ElevatedButton(
+      style: ButtonStyle(
+        elevation: MaterialStateProperty.all(30),
       ),
+      onPressed: () {
+        showCurrencyPicker(
+          context: context,
+          showFlag: true,
+          showSearchField: true,
+          showCurrencyName: true,
+          showCurrencyCode: true,
+          onSelect: (Currency currency) {
+            setState(() {
+              if (choice == "source") {
+                fromCurrency = currency;
+              } else if (choice == "destination") {
+                toCurrency = currency;
+              }
+            });
+          },
+          favorite: ['INR', 'EUR', 'USD', 'GBP'],
+        );
+      },
+      child: const Text("Choose!"),
+    );
+  }
+
+  Widget enterCurr(String choice) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          choice == "source" ? fromCurrency.symbol : toCurrency.symbol,
+          style: Theme.of(context).textTheme.headline4,
+        ),
+        SizedBox(
+          width: MediaQuery.of(context).size.width / 50,
+        ),
+        SizedBox(
+          width: MediaQuery.of(context).size.width / 4,
+          child: TextField(
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (number) {
+              if (choice == "source") {
+                setState(() {
+                  fromCurrencyValue = double.parse(number);
+                  toCurrencyValue = fromCurrencyValue * conversionValue;
+                  print("FROM : $fromCurrencyValue");
+                  print("TO : $toCurrencyValue");
+                });
+              } else if (choice == "destination") {
+                setState(() {
+                  toCurrencyValue = double.parse(number);
+                  fromCurrencyValue = toCurrencyValue / conversionValue;
+                  print("FROM : $fromCurrencyValue");
+                  print("TO : $toCurrencyValue");
+                });
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -130,13 +170,49 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
   }
 
   Widget currentCurrencyRow(String choice) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Column(
       children: [
-        printCurr(choice),
-        updateCurr(choice),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            printCurr(choice),
+            updateCurr(choice),
+          ],
+        ),
+        enterCurr(choice),
       ],
     );
+  }
+
+  Widget inputCard() {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          currentCurrencyRow("source"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: () {},
+                tooltip: "Convert",
+                icon: const Icon(Icons.arrow_downward_rounded, size: 30),
+              ),
+              IconButton(
+                onPressed: swapCurr,
+                tooltip: "Swap Currencies",
+                icon: const Icon(Icons.swap_vertical_circle_outlined, size: 30),
+              ),
+            ],
+          ),
+          currentCurrencyRow("destination"),
+        ],
+      ),
+    );
+  }
+
+  Widget resultCard() {
+    return const Text("Hi!");
   }
 
   @override
@@ -155,29 +231,12 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
           child: ListView(
             children: [
               myCard(
-                contents: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    currentCurrencyRow("source"),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.arrow_downward_sharp),
-                        IconButton(
-                          onPressed: swapCurr,
-                          tooltip: "Swap Currencies",
-                          icon: const Icon(Icons.swap_vertical_circle_outlined),
-                        ),
-                      ],
-                    ),
-                    currentCurrencyRow("destination"),
-                  ],
-                ),
+                contents: inputCard(),
                 deviceHeight: MediaQuery.of(context).size.height,
                 deviceWidth: MediaQuery.of(context).size.width,
               ),
               myCard(
-                contents: const Text("Hi !"),
+                contents: resultCard(),
                 deviceHeight: MediaQuery.of(context).size.height,
                 deviceWidth: MediaQuery.of(context).size.width,
               ),
