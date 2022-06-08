@@ -122,7 +122,7 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
       children: [
         Text(
           choice == "source" ? fromCurrency.symbol : toCurrency.symbol,
-          style: Theme.of(context).textTheme.headline4,
+          style: Theme.of(context).textTheme.headline5,
         ),
         SizedBox(
           width: MediaQuery.of(context).size.width / 50,
@@ -144,7 +144,7 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
                 )
               : Text(
                   "$toCurrencyValue",
-                  style: Theme.of(context).textTheme.headline4,
+                  style: Theme.of(context).textTheme.headline6,
                 ),
         ),
       ],
@@ -210,20 +210,13 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           currentCurrencyRow("source"),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                onPressed: genParticularForexRate,
-                tooltip: "Convert",
-                icon: const Icon(Icons.arrow_downward_rounded, size: 30),
-              ),
-              IconButton(
-                onPressed: swapCurr,
-                tooltip: "Swap Currencies",
-                icon: const Icon(Icons.swap_vertical_circle_outlined, size: 30),
-              ),
-            ],
+          const SizedBox(
+            height: 10,
+          ),
+          IconButton(
+            onPressed: swapCurr,
+            tooltip: "Swap Currencies",
+            icon: const Icon(Icons.swap_calls_outlined, size: 25),
           ),
           currentCurrencyRow("destination"),
         ],
@@ -285,7 +278,7 @@ class _CurrencyConvertorPageState extends State<CurrencyConvertorPage> {
                 ],
               ),
             ),
-          ElevatedButton(
+          TextButton(
             child: const Text('Close Forex Rate Sheet'),
             onPressed: () => Navigator.pop(context),
           )
